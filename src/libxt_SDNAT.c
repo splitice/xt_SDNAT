@@ -60,7 +60,8 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 	unsigned int size;
 
 	/* One rangesize already in struct ipt_natinfo */
-	size = XT_ALIGN(sizeof(*info) + (info->snat_mr.rangesize + info->dnat_mr.rangesize) * sizeof(*range));
+	target->rangesize++;
+	size = XT_ALIGN(sizeof(struct xt_entry_target) + ((info->snat_mr.rangesize + info->dnat_mr.rangesize) * sizeof(*range)));
 
 	info = realloc(info, size);
 	if (!info)
@@ -68,7 +69,6 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 
 	info->t.u.target_size = size;
 	target->range[target->rangesize] = *range;
-	target->rangesize++;
 
 	return info;
 }
@@ -287,7 +287,7 @@ static void SDNAT_save(const void *ip, const struct xt_entry_target *target)
 	}
 }
 
-static struct xtables_target dnat_tg_reg = {
+static struct xtables_target sdnat_tg_reg = {
 	.name		= "SDNAT",
     .revision      = 1,
 	.version       = XTABLES_VERSION,
@@ -304,5 +304,5 @@ static struct xtables_target dnat_tg_reg = {
 
 void _init(void)
 {
-	xtables_register_target(&dnat_tg_reg);
+	xtables_register_target(&sdnat_tg_reg);
 }
