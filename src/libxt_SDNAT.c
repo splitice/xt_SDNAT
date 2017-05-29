@@ -28,8 +28,8 @@ enum {
 struct ipt_natinfo
 {
 	struct xt_entry_target t;
-	struct nf_nat_ipv4_multi_range_compat snat_mr;
-	struct nf_nat_ipv4_multi_range_compat dnat_mr;
+	struct nf_nat_range snat_mr;
+	struct nf_nat_range dnat_mr;
 };
 
 static void SDNAT_help(void)
@@ -55,7 +55,7 @@ static const struct xt_option_entry SDNAT_opts[] = {
 };
 
 static struct ipt_natinfo *
-append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, struct nf_nat_ipv4_multi_range_compat* target)
+append_range(struct ipt_natinfo *info, const struct nf_nat_range *range, struct nf_nat_range* target)
 {
 	int size;
 
@@ -79,7 +79,7 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 
 /* Ranges expected in network order. */
 static struct xt_entry_target *
-parse_to(const char *orig_arg, int portok, struct ipt_natinfo *info, struct nf_nat_ipv4_multi_range_compat* target)
+parse_to(const char *orig_arg, int portok, struct ipt_natinfo *info, struct nf_nat_range* target)
 {
 	struct nf_nat_ipv4_range range;
 	char *arg, *colon, *dash, *error;
@@ -296,8 +296,8 @@ static struct xtables_target sdnat_tg_reg = {
     .revision      = 1,
 	.version       = XTABLES_VERSION,
 	.family		= NFPROTO_IPV4,
-	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
-	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
+	.size		= XT_ALIGN(sizeof(struct nf_nat_range) * 2),
+	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_range) * 2),
 	.help		= SDNAT_help,
 	.x6_parse	= SDNAT_parse,
 	.x6_fcheck	= SDNAT_fcheck,
