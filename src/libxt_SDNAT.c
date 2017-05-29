@@ -224,14 +224,14 @@ static void SDNAT_fcheck(struct xt_fcheck_call *cb)
 	static const unsigned int f = F_TO_DEST | F_RANDOM;
 	struct nf_nat_ipv4_multi_range_compat *mr = cb->data;
 
-	if ((cb->xflags & f) == f)
+	/*if ((cb->xflags & f) == f)
 		mr->snat_range[0].flags |= NF_NAT_RANGE_PROTO_RANDOM;
 
 	if ((cb->xflags & f) == f)
 		mr->dnat_range[0].flags |= NF_NAT_RANGE_PROTO_RANDOM;
 	
 	if ((cb->xflags & r) == r)
-		mr->snat_range[0].flags |= NF_NAT_RANGE_PROTO_RANDOM_FULLY;
+		mr->snat_range[0].flags |= NF_NAT_RANGE_PROTO_RANDOM_FULLY;*/
 }
 
 static void print_range(const struct nf_nat_ipv4_range *r)
