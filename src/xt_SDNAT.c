@@ -52,7 +52,8 @@ static struct xt_target xt_nat_target_reg[] __read_mostly = {
 		.targetsize	= sizeof(struct nf_nat_ipv4_multi_range_compat)*2,
 		.table		= "nat",
 		.hooks		= (1 << NF_INET_PRE_ROUTING) |
-				  (1 << NF_INET_LOCAL_IN),
+				  (1 << NF_INET_LOCAL_IN), |
+				  (1 << NF_INET_LOCAL_OUT),
 		.me		= THIS_MODULE,
 	}
 };
