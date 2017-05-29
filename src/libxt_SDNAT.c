@@ -280,14 +280,6 @@ static void SDNAT_save(const void *ip, const struct xt_entry_target *target)
 	for (i = 0; i < info->dnat_mr.rangesize; i++) {
 		printf(" --to-destination ");
 		print_range(&info->dnat_mr.range[i]);
-	
-		printf(" --to-source ");
-		print_range(&info->dnat_mr.range[i]);
-		
-		if (info->dnat_mr.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
-			printf(" --random");
-		if (info->dnat_mr.range[i].flags & NF_NAT_RANGE_PERSISTENT)
-			printf(" --persistent");
 	}
 }
 
