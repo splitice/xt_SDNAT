@@ -61,7 +61,7 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 
 	/* One rangesize already in struct ipt_natinfo */
 	target->rangesize++;
-	size = XT_ALIGN(sizeof(struct xt_entry_target) + ((info->snat_mr.rangesize + info->dnat_mr.rangesize) * sizeof(*range)));
+	size = XT_ALIGN(sizeof(*info) + ((info->snat_mr.rangesize + info->dnat_mr.rangesize - 2) * sizeof(*range)));
 
 	info = realloc(info, size);
 	if (!info)
