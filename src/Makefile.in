@@ -1,0 +1,76 @@
+# Edit Makefile.in and run ./configure
+
+KVERSION = @KVERSION@
+KDIR = @KDIR@
+KINSTDIR = $(shell dirname @KDIR@)
+KOPTS = @KOPTS@
+IPTABLES_CFLAGS = @IPTABLES_CFLAGS@
+IPTABLES_MODULES = @IPTABLES_MODULES@
+DEPMOD = /sbin/depmod -a $(KVERSION)
+CARGS = @CARGS@
+CC = gcc
+
+# https://www.kernel.org/doc/Documentation/kbuild/modules.txt
+# https://www.kernel.org/doc/Documentation/kbuild/makefiles.txt
+obj-m = xt_NOCREATE.o
+ccflags-y = @KOPTS@
+
+all: xt_NOCREATE.ko libxt_NOCREATE.so
+
+xt_NOCREATE.ko: xt_NOCREATE.c Makefile
+	@echo Compiling for kernel $(KVERSION)
+	make -C $(KDIR) M=$(CURDIR) modules CONFIG_DEBUG_INFO=y
+	@touch $@
+	
+sparse: | xt_NOCREATE.c Makefile
+	@rm -f xt_NOCREATE.ko xt_NOCREATE.o
+	@echo Compiling for kernel $(KVERSION)
+	make -C $(KDIR) M=$(CURDIR) modules C=1
+	@touch xt_NOCREATE.ko
+minstall: | xt_NOCREATE.ko
+	@echo " *"
+	make -C $(KDIR) M=$(CURDIR) modules_install INSTALL_MOD_PATH=$(DESTDIR)
+	$(DEPMOD)
+mclean:
+	make -C $(KDIR) M=$(CURDIR) clean
+lclean:
+	-rm -f *.so *_sh.o
+clean: mclean lclean
+	-rm -f *.so *.o modules.order
+	
+libxt_NOCREATE_sh.o: libxt_NOCREATE.c
+	gcc -O2 -Wall -Wunused $(IPTABLES_CFLAGS) -fPIC -o $@ -c libxt_NOCREATE.c
+
+
+%.so: %_sh.o
+	gcc -shared -o $@ $<
+
+linstall: | libxt_NOCREATE.so
+	@echo " *"
+	install -D libxt_NOCREATE.so $(DESTDIR)$(IPTABLES_MODULES)/libxt_NOCREATE.so
+
+dinstall:
+	@echo " *"
+	@./install-dkms.sh --install
+
+install: minstall linstall
+
+uninstall:
+	-rm -f $(DESTDIR)$(IPTABLES_MODULES)/libxt_NOCREATE.so
+	@if [ "@DKMSINSTALL@" = dinstall ]; then ./install-dkms.sh --uninstall; fi
+	-rm -f $(DESTDIR)$(KINSTDIR)/extra/xt_NOCREATE.ko
+
+Makefile: Makefile.in configure
+	./configure --make ${CARGS}
+
+load: all
+	-insmod xt_NOCREATE.ko
+
+unload:
+	-rmmod xt_NOCREATE.ko
+
+reload: unload load
+
+ChangeLog:
+	gitlog-to-changelog > ChangeLog
+.PHONY: ChangeLog
