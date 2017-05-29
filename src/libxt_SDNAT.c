@@ -68,7 +68,7 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 		xtables_error(OTHER_PROBLEM, "Out of memory\n");
 
 	info->t.u.target_size = size;
-	target->range[info->mr.rangesize] = *range;
+	target->range[target->rangesize] = *range;
 	target->rangesize++;
 
 	return info;
@@ -194,7 +194,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 		cb->xflags |= F_X_TO_SRC;
 		break;
 	case O_PERSISTENT:
-		info->mr.range[0].flags |= NF_NAT_RANGE_PERSISTENT;
+		info->snat_mr.range[0].flags |= NF_NAT_RANGE_PERSISTENT;
 		break;
 	}
 }
