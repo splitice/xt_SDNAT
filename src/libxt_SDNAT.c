@@ -62,7 +62,7 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 	/* One rangesize already in struct ipt_natinfo */
 	target->rangesize++;
 	
-	size = ((info->snat_mr.rangesize + info->dnat_mr.rangesize - 2) * sizeof(*range)));
+	size = (info->snat_mr.rangesize + info->dnat_mr.rangesize - 2) * sizeof(*range);
 	if(size < 0) size = 0;
 	size = XT_ALIGN(sizeof(*info) + size);
 	
