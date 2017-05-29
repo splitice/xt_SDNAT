@@ -12,10 +12,24 @@
 #include <linux/netfilter/x_tables.h>
 #include <net/netfilter/nf_nat_core.h>
 
+static void xt_nat_convert_range(struct nf_nat_range *dst,
+				 const struct nf_nat_ipv4_range *src)
+{
+	memset(&dst->min_addr, 0, sizeof(dst->min_addr));
+	memset(&dst->max_addr, 0, sizeof(dst->max_addr));
+
+	dst->flags	 = src->flags;
+	dst->min_addr.ip = src->min_ip;
+	dst->max_addr.ip = src->max_ip;
+	dst->min_proto	 = src->min;
+	dst->max_proto	 = src->max;
+}
+
 static unsigned int
 xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	const struct nf_nat_range *range = par->targinfo;
+	const struct nf_nat_ipv4_multi_range_compat *mr = par->targinfo;
+	struct nf_nat_range snat_range, dnat_range;
 	enum ip_conntrack_info ctinfo;
 	struct nf_conn *ct;
 
@@ -23,8 +37,10 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 	NF_CT_ASSERT(ct != NULL &&
 		     (ctinfo == IP_CT_NEW || ctinfo == IP_CT_RELATED));
 
-	nf_nat_setup_info(ct, range, NF_NAT_MANIP_SRC);
-	return nf_nat_setup_info(ct, range + 1, NF_NAT_MANIP_DST);
+	xt_nat_convert_range(&snat_range, &mr->range[0]);
+	xt_nat_convert_range(&dnat_range, &(mr+1)->range[0]);
+	nf_nat_setup_info(ct, &snat_range, NF_NAT_MANIP_SRC);
+	return nf_nat_setup_info(ct, &dnat_range, NF_NAT_MANIP_DST);
 }
 
 static struct xt_target xt_nat_target_reg[] __read_mostly = {
@@ -32,7 +48,7 @@ static struct xt_target xt_nat_target_reg[] __read_mostly = {
 		.name		= "SDNAT",
 		.revision	= 1,
 		.target		= xt_sdnat_target_v1,
-		.targetsize	= sizeof(struct nf_nat_range)*2,
+		.targetsize	= sizeof(struct nf_nat_ipv4_multi_range_compat)*2,
 		.table		= "nat",
 		.hooks		= (1 << NF_INET_PRE_ROUTING) |
 				  (1 << NF_INET_LOCAL_IN),

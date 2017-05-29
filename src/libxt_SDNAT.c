@@ -28,8 +28,8 @@ enum {
 struct ipt_natinfo
 {
 	struct xt_entry_target t;
-	struct nf_nat_ipv4_multi_range_compat snat_mr;
-	struct nf_nat_ipv4_multi_range_compat dnat_mr;
+	struct nf_nat_ipv4_range snat_mr;
+	struct nf_nat_ipv4_range dnat_mr;
 };
 
 static void SDNAT_help(void)
@@ -292,8 +292,8 @@ static struct xtables_target dnat_tg_reg = {
     .revision      = 1,
 	.version       = XTABLES_VERSION,
 	.family		= NFPROTO_IPV4,
-	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
-	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
+	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_range) * 2),
+	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_range) * 2),
 	.help		= SDNAT_help,
 	.x6_parse	= SDNAT_parse,
 	.x6_fcheck	= SDNAT_fcheck,
