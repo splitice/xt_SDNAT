@@ -33,7 +33,7 @@ struct ipt_natinfo
 	struct nf_nat_ipv4_multi_range_compat dnat_mr;
 };
 
-static void DNAT_help(void)
+static void SDNAT_help(void)
 {
 	printf(
 "SDNAT target options:\n"
@@ -44,7 +44,7 @@ static void DNAT_help(void)
 "[--random] [--persistent]\n");
 }
 
-static const struct xt_option_entry DNAT_opts[] = {
+static const struct xt_option_entry SDNAT_opts[] = {
 	{.name = "to-destination", .id = O_TO_DEST, .type = XTTYPE_STRING,
 	 .flags = XTOPT_MAND | XTOPT_MULTI},
 	{.name = "to-source", .id = O_TO_SRC, .type = XTTYPE_STRING,
@@ -254,7 +254,7 @@ static void print_range(const struct nf_nat_ipv4_range *r)
 	}
 }
 
-static void DNAT_print(const void *ip, const struct xt_entry_target *target,
+static void SDNAT_print(const void *ip, const struct xt_entry_target *target,
                        int numeric)
 {
 	const struct ipt_natinfo *info = (const void *)target;
@@ -314,12 +314,12 @@ static struct xtables_target dnat_tg_reg = {
 	.family		= NFPROTO_IPV4,
 	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat)),
 	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat)),
-	.help		= DNAT_help,
+	.help		= SDNAT_help,
 	.x6_parse	= SDNAT_parse,
-	.x6_fcheck	= DNAT_fcheck,
+	.x6_fcheck	= SDNAT_fcheck,
 	.print		= SDNAT_print,
 	.save		= SDNAT_save,
-	.x6_options	= DNAT_opts,
+	.x6_options	= SDNAT_opts,
 };
 
 void _init(void)
