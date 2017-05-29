@@ -289,7 +289,8 @@ static void SDNAT_save(const void *ip, const struct xt_entry_target *target)
 
 static struct xtables_target dnat_tg_reg = {
 	.name		= "SDNAT",
-	.version	= 1,
+    .revision      = 1,
+	.version       = XTABLES_VERSION,
 	.family		= NFPROTO_IPV4,
 	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
 	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
