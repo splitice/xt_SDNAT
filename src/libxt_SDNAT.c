@@ -45,9 +45,9 @@ static void SDNAT_help(void)
 
 static const struct xt_option_entry SDNAT_opts[] = {
 	{.name = "to-destination", .id = O_TO_DEST, .type = XTTYPE_STRING,
-	 .flags = XTOPT_MAND | XTOPT_MULTI},
+	 .flags = XTOPT_MAND},
 	{.name = "to-source", .id = O_TO_SRC, .type = XTTYPE_STRING,
-	 .flags = XTOPT_MAND | XTOPT_MULTI},
+	 .flags = XTOPT_MAND},
 	{.name = "random", .id = O_RANDOM, .type = XTTYPE_NONE},
 	{.name = "random-fully", .id = O_RANDOM_FULLY, .type = XTTYPE_NONE},
 	{.name = "persistent", .id = O_PERSISTENT, .type = XTTYPE_NONE},
@@ -291,8 +291,8 @@ static struct xtables_target dnat_tg_reg = {
 	.name		= "SDNAT",
 	.version	= XTABLES_VERSION,
 	.family		= NFPROTO_IPV4,
-	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat)),
-	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat)),
+	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
+	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
 	.help		= SDNAT_help,
 	.x6_parse	= SDNAT_parse,
 	.x6_fcheck	= SDNAT_fcheck,
