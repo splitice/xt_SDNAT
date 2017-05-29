@@ -12,18 +12,8 @@
 #include <linux/netfilter/x_tables.h>
 #include <net/netfilter/nf_nat_core.h>
 
-static int xt_nat_checkentry(const struct xt_tgchk_param *par)
-{
-	return nf_ct_netns_get(par->net, par->family);
-}
-
-static void xt_nat_destroy(const struct xt_tgdtor_param *par)
-{
-	nf_ct_netns_put(par->net, par->family);
-}
-
 static unsigned int
-xt_dnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
+xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct nf_nat_range *range = par->targinfo;
 	enum ip_conntrack_info ctinfo;
@@ -41,8 +31,6 @@ static struct xt_target xt_nat_target_reg[] __read_mostly = {
 	{
 		.name		= "SDNAT",
 		.revision	= 1,
-		.checkentry	= xt_nat_checkentry,
-		.destroy	= xt_nat_destroy,
 		.target		= xt_sdnat_target_v1,
 		.targetsize	= sizeof(struct nf_nat_range)*2,
 		.table		= "nat",
