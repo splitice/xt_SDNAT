@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <xtables.h>
-#include <iptables.h> /* get_kernel_version */
 #include <limits.h> /* INT_MAX in ip_tables.h */
 #include <linux/netfilter_ipv4/ip_tables.h>
 #include <linux/netfilter/nf_nat.h>
@@ -180,9 +179,6 @@ static void SDNAT_parse(struct xt_option_call *cb)
 	switch (cb->entry->id) {
 	case O_TO_DEST:
 		if (cb->xflags & F_X_TO_DEST) {
-			if (!kernel_version)
-				get_kernel_version();
-			if (kernel_version > LINUX_VERSION(2, 6, 10))
 				xtables_error(PARAMETER_PROBLEM,
 					   "DNAT: Multiple --to-destination not supported");
 		}
@@ -191,9 +187,6 @@ static void SDNAT_parse(struct xt_option_call *cb)
 		break;
 	case O_TO_SRC:
 		if (cb->xflags & F_X_TO_SRC) {
-			if (!kernel_version)
-				get_kernel_version();
-			if (kernel_version > LINUX_VERSION(2, 6, 10))
 				xtables_error(PARAMETER_PROBLEM,
 					   "SNAT: Multiple --to-source not supported");
 		}
