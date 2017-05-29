@@ -199,26 +199,6 @@ static void SDNAT_parse(struct xt_option_call *cb)
 	}
 }
 
-static void print_range(const struct nf_nat_ipv4_range *r)
-{
-	if (r->flags & NF_NAT_RANGE_MAP_IPS) {
-		struct in_addr a;
-
-		a.s_addr = r->min_ip;
-		printf("%s", xtables_ipaddr_to_numeric(&a));
-		if (r->max_ip != r->min_ip) {
-			a.s_addr = r->max_ip;
-			printf("-%s", xtables_ipaddr_to_numeric(&a));
-		}
-	}
-	if (r->flags & NF_NAT_RANGE_PROTO_SPECIFIED) {
-		printf(":");
-		printf("%hu", ntohs(r->min.tcp.port));
-		if (r->max.tcp.port != r->min.tcp.port)
-			printf("-%hu", ntohs(r->max.tcp.port));
-	}
-}
-
 static void SDNAT_fcheck(struct xt_fcheck_call *cb)
 {
 	static const unsigned int f = F_TO_DEST | F_RANDOM;
