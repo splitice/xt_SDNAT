@@ -12,22 +12,22 @@ CC = gcc
 
 # https://www.kernel.org/doc/Documentation/kbuild/modules.txt
 # https://www.kernel.org/doc/Documentation/kbuild/makefiles.txt
-obj-m = xt_NOCREATE.o
+obj-m = xt_SDNAT.o
 ccflags-y = @KOPTS@
 
-all: xt_NOCREATE.ko libxt_NOCREATE.so
+all: xt_SDNAT.ko libxt_SDNAT.so
 
-xt_NOCREATE.ko: xt_NOCREATE.c Makefile
+xt_SDNAT.ko: xt_SDNAT.c Makefile
 	@echo Compiling for kernel $(KVERSION)
 	make -C $(KDIR) M=$(CURDIR) modules CONFIG_DEBUG_INFO=y
 	@touch $@
 	
-sparse: | xt_NOCREATE.c Makefile
-	@rm -f xt_NOCREATE.ko xt_NOCREATE.o
+sparse: | xt_SDNAT.c Makefile
+	@rm -f xt_SDNAT.ko xt_SDNAT.o
 	@echo Compiling for kernel $(KVERSION)
 	make -C $(KDIR) M=$(CURDIR) modules C=1
-	@touch xt_NOCREATE.ko
-minstall: | xt_NOCREATE.ko
+	@touch xt_SDNAT.ko
+minstall: | xt_SDNAT.ko
 	@echo " *"
 	make -C $(KDIR) M=$(CURDIR) modules_install INSTALL_MOD_PATH=$(DESTDIR)
 	$(DEPMOD)
@@ -38,16 +38,16 @@ lclean:
 clean: mclean lclean
 	-rm -f *.so *.o modules.order
 	
-libxt_NOCREATE_sh.o: libxt_NOCREATE.c
-	gcc -O2 -Wall -Wunused $(IPTABLES_CFLAGS) -fPIC -o $@ -c libxt_NOCREATE.c
+libxt_SDNAT_sh.o: libxt_SDNAT.c
+	gcc -O2 -Wall -Wunused $(IPTABLES_CFLAGS) -fPIC -o $@ -c libxt_SDNAT.c
 
 
 %.so: %_sh.o
 	gcc -shared -o $@ $<
 
-linstall: | libxt_NOCREATE.so
+linstall: | libxt_SDNAT.so
 	@echo " *"
-	install -D libxt_NOCREATE.so $(DESTDIR)$(IPTABLES_MODULES)/libxt_NOCREATE.so
+	install -D libxt_SDNAT.so $(DESTDIR)$(IPTABLES_MODULES)/libxt_SDNAT.so
 
 dinstall:
 	@echo " *"
@@ -56,18 +56,18 @@ dinstall:
 install: minstall linstall
 
 uninstall:
-	-rm -f $(DESTDIR)$(IPTABLES_MODULES)/libxt_NOCREATE.so
+	-rm -f $(DESTDIR)$(IPTABLES_MODULES)/libxt_SDNAT.so
 	@if [ "@DKMSINSTALL@" = dinstall ]; then ./install-dkms.sh --uninstall; fi
-	-rm -f $(DESTDIR)$(KINSTDIR)/extra/xt_NOCREATE.ko
+	-rm -f $(DESTDIR)$(KINSTDIR)/extra/xt_SDNAT.ko
 
 Makefile: Makefile.in configure
 	./configure --make ${CARGS}
 
 load: all
-	-insmod xt_NOCREATE.ko
+	-insmod xt_SDNAT.ko
 
 unload:
-	-rmmod xt_NOCREATE.ko
+	-rmmod xt_SDNAT.ko
 
 reload: unload load
 
