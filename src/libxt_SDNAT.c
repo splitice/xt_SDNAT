@@ -57,18 +57,22 @@ static const struct xt_option_entry SDNAT_opts[] = {
 static struct ipt_natinfo *
 append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, struct nf_nat_ipv4_multi_range_compat* target)
 {
-	unsigned int size;
+	int size;
 
 	/* One rangesize already in struct ipt_natinfo */
 	target->rangesize++;
-	size = XT_ALIGN(sizeof(*info) + ((info->snat_mr.rangesize + info->dnat_mr.rangesize - 2) * sizeof(*range)));
-
+	
+	size = ((info->snat_mr.rangesize + info->dnat_mr.rangesize - 2) * sizeof(*range)));
+	if(size < 0) size = 0;
+	size = XT_ALIGN(sizeof(*info) + size);
+	
+	
 	info = realloc(info, size);
 	if (!info)
 		xtables_error(OTHER_PROBLEM, "Out of memory\n");
 
-	info->t.u.target_size = size;
-	target->range[target->rangesize] = *range;
+	info->t.u.target_size = (unsigned int)size;
+	target->range[target->rangesize - 1] = *range;
 
 	return info;
 }
