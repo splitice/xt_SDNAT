@@ -12,7 +12,6 @@ enum {
 	O_TO_SRC,
 	O_RANDOM,
 	O_RANDOM_FULLY,
-	O_PERSISTENT,
 	O_X_TO_SRC,
 	O_PERSISTENT,
 	O_X_TO_DEST, /* hidden flag */
