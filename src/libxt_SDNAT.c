@@ -28,8 +28,8 @@ enum {
 struct ipt_natinfo
 {
 	struct xt_entry_target t;
-	struct nf_nat_ipv4_range snat_mr;
-	struct nf_nat_ipv4_range dnat_mr;
+	struct nf_nat_ipv4_multi_range_compat snat_mr;
+	struct nf_nat_ipv4_multi_range_compat dnat_mr;
 };
 
 static void SDNAT_help(void)
