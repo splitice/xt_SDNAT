@@ -208,13 +208,6 @@ static void SDNAT_parse(struct xt_option_call *cb)
 	case O_PERSISTENT:
 		info->info.src.range[0].flags |= NF_NAT_RANGE_PERSISTENT;
 		break;
-	case O_CTMARK:
-		info->info.ctmark = cb->arg;
-		break;
-
-	case O_CTMASK:
-		info->info.ctmask = cb->arg;
-		break;
 	}
 }
 
@@ -261,7 +254,7 @@ static void SDNAT_print(const void *ip, const struct xt_entry_target *target,
 
 	printf(" from:");
 	for (i = 0; i < t->info.src.rangesize; i++) {
-		print_range(&info->snat_mr.range[i]);
+		print_range(&info->info.src.range[i]);
 		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
 			printf(" random");
 		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
