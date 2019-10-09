@@ -18,7 +18,6 @@ static bool xt_nat_convert_range(struct nf_nat_range *dst,
 {
 	if(!(src->flags & NF_NAT_SET))
 		return false;
-	}
 
 	memset(&dst->min_addr, 0, sizeof(dst->min_addr));
 	memset(&dst->max_addr, 0, sizeof(dst->max_addr));
