@@ -172,6 +172,12 @@ parse_to(const char *orig_arg, int portok, struct ipt_natinfo *info, struct nf_n
 	return &(append_range(info, &range, target)->t);
 }
 
+static void SDNAT_init(struct xt_entry_target *t){
+	const struct ipt_natinfo *t = (const void *)target;
+	t->info.ctmark = 0;
+	t->info.ctmask = 0;
+}
+
 static void SDNAT_parse(struct xt_option_call *cb)
 {
 	const struct ipt_entry *entry = cb->xt_entry;
@@ -303,6 +309,7 @@ static struct xtables_target sdnat_tg_reg = {
 	.family		= NFPROTO_IPV4,
 	.size		= XT_ALIGN(sizeof(struct xt_sdnat_info)),
 	.userspacesize	= XT_ALIGN(sizeof(struct xt_sdnat_info)),
+	.init       = SDNAT_init,
 	.help		= SDNAT_help,
 	.x6_parse	= SDNAT_parse,
 	.x6_fcheck	= SDNAT_fcheck,
