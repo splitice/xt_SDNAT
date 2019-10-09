@@ -57,9 +57,9 @@ static const struct xt_option_entry SDNAT_opts[] = {
 	{.name = "random-fully", .id = O_RANDOM_FULLY, .type = XTTYPE_NONE},
 	{.name = "persistent", .id = O_PERSISTENT, .type = XTTYPE_NONE},
 	{.name = "ctmark", .id = O_CTMARK, .type = XTTYPE_UINT32, .flags = XTOPT_PUT,
-	 XTOPT_POINTER(struct xt_sdnat_info, cfg.ctmark)},
+	 XTOPT_POINTER(struct xt_sdnat_info, ctmark)},
 	{.name = "ctmask", .id = O_CTMASK, .type = XTTYPE_UINT32, .flags = XTOPT_PUT,
-	 XTOPT_POINTER(struct xt_sdnat_info, cfg.ctmask)},
+	 XTOPT_POINTER(struct xt_sdnat_info, ctmask)},
 	XTOPT_TABLEEND,
 };
 
@@ -71,7 +71,7 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 	/* One rangesize already in struct ipt_natinfo */
 	target->rangesize++;
 	
-	size = (info->src.rangesize + info->src.rangesize - 2) * sizeof(*range);
+	size = (info->info.src.rangesize + info->info.src.rangesize - 2) * sizeof(*range);
 	if(size < 0) size = 0;
 	size = XT_ALIGN(sizeof(*info) + size);
 	
@@ -194,7 +194,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 				xtables_error(PARAMETER_PROBLEM,
 					   "DNAT: Multiple --to-destination not supported");
 		}
-		*cb->target = parse_to(cb->arg, portok, info, &(info->dst));
+		*cb->target = parse_to(cb->arg, portok, info, &(info->info.dst));
 		cb->xflags |= F_X_TO_DEST;
 		break;
 	case O_TO_SRC:
@@ -202,7 +202,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 				xtables_error(PARAMETER_PROBLEM,
 					   "SNAT: Multiple --to-source not supported");
 		}
-		*cb->target = parse_to(cb->arg, portok, info, &(info->src.snat));
+		*cb->target = parse_to(cb->arg, portok, info, &(info->info.src.snat));
 		cb->xflags |= F_X_TO_SRC;
 		break;
 	case O_PERSISTENT:
