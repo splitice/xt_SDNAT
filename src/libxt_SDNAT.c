@@ -100,6 +100,7 @@ parse_to(const char *orig_arg, int portok, struct ipt_natinfo *info, struct nf_n
 	memset(&range, 0, sizeof(range));
 	colon = strchr(arg, ':');
 
+	range.flags |= NF_NAT_SET;
 	if (colon) {
 		int port;
 
@@ -234,6 +235,9 @@ static void SDNAT_fcheck(struct xt_fcheck_call *cb)
 
 static void print_range(const struct nf_nat_ipv4_range *r)
 {
+	if(!(r->flags & NF_NAT_SET)){
+		return;
+	}
 	if (r->flags & NF_NAT_RANGE_MAP_IPS) {
 		struct in_addr a;
 
@@ -284,6 +288,10 @@ static void SDNAT_save(const void *ip, const struct xt_entry_target *target)
 	unsigned int i = 0;
 
 	for (i = 0; i < t->info.src.rangesize; i++) {	
+		if(!(t->info.src.range[i].flags & NF_NAT_SET)){
+			continue;
+		}
+
 		printf(" --to-source ");
 		print_range(&t->info.src.range[i]);
 		

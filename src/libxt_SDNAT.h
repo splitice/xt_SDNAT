@@ -6,3 +6,6 @@ struct xt_sdnat_info {
 	u_int32_t ctmark;
 	u_int32_t ctmask;
 };
+
+
+#define NF_NAT_SET		(1 << 5)

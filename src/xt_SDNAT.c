@@ -13,17 +13,23 @@
 #include <net/netfilter/nf_conntrack_ecache.h>
 #include "libxt_SDNAT.h"
 
-static void xt_nat_convert_range(struct nf_nat_range *dst,
+static bool xt_nat_convert_range(struct nf_nat_range *dst,
 				 const struct nf_nat_ipv4_range *src)
 {
+	if(!(src->flags & NF_NAT_SET))
+		return false;
+	}
+
 	memset(&dst->min_addr, 0, sizeof(dst->min_addr));
 	memset(&dst->max_addr, 0, sizeof(dst->max_addr));
 
-	dst->flags	 = src->flags;
+	dst->flags	     = src->flags & ~NF_NAT_SET;
 	dst->min_addr.ip = src->min_ip;
 	dst->max_addr.ip = src->max_ip;
 	dst->min_proto	 = src->min;
 	dst->max_proto	 = src->max;
+
+	return true;
 }
 
 static unsigned int
@@ -40,7 +46,6 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 	NF_CT_ASSERT(ct != NULL &&
 		     (ctinfo == IP_CT_NEW || ctinfo == IP_CT_RELATED));
 
-	xt_nat_convert_range(&snat_range, info->src.range);
 	xt_nat_convert_range(&dnat_range, info->dst.range);
 
 
@@ -51,7 +56,9 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 		nf_conntrack_event_cache(IPCT_MARK, ct);
 	}
 	
-	nf_nat_setup_info(ct, &snat_range, NF_NAT_MANIP_SRC);
+	if(xt_nat_convert_range(&snat_range, info->src.range)){
+		nf_nat_setup_info(ct, &snat_range, NF_NAT_MANIP_SRC);
+	}
 	return nf_nat_setup_info(ct, &dnat_range, NF_NAT_MANIP_DST);
 }
 
