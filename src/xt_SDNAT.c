@@ -9,6 +9,7 @@
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/netfilter.h>
+#include <net/netfilter/nf_nat_core.h>
 #include <net/netfilter/nf_conntrack_ecache.h>
 #include "libxt_SDNAT.h"
 

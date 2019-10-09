@@ -1,4 +1,3 @@
-#include <net/netfilter/nf_nat_core.h>
 #include <linux/netfilter_ipv4/ip_tables.h>
 
 struct xt_sdnat_info {
