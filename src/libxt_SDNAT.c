@@ -57,9 +57,9 @@ static const struct xt_option_entry SDNAT_opts[] = {
 	{.name = "random-fully", .id = O_RANDOM_FULLY, .type = XTTYPE_NONE},
 	{.name = "persistent", .id = O_PERSISTENT, .type = XTTYPE_NONE},
 	{.name = "ctmark", .id = O_CTMARK, .type = XTTYPE_UINT32, .flags = XTOPT_PUT,
-	 XTOPT_POINTER(s, cfg.ctmark)},
+	 XTOPT_POINTER(struct xt_sdnat_info, cfg.ctmark)},
 	{.name = "ctmask", .id = O_CTMASK, .type = XTTYPE_UINT32, .flags = XTOPT_PUT,
-	 XTOPT_POINTER(s, cfg.ctmask)},
+	 XTOPT_POINTER(struct xt_sdnat_info, cfg.ctmask)},
 	XTOPT_TABLEEND,
 };
 
@@ -71,7 +71,7 @@ append_range(struct ipt_natinfo *info, const struct nf_nat_ipv4_range *range, st
 	/* One rangesize already in struct ipt_natinfo */
 	target->rangesize++;
 	
-	size = (info->snat_mr.rangesize + info->dnat_mr.rangesize - 2) * sizeof(*range);
+	size = (info->src.rangesize + info->src.rangesize - 2) * sizeof(*range);
 	if(size < 0) size = 0;
 	size = XT_ALIGN(sizeof(*info) + size);
 	
@@ -194,7 +194,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 				xtables_error(PARAMETER_PROBLEM,
 					   "DNAT: Multiple --to-destination not supported");
 		}
-		*cb->target = parse_to(cb->arg, portok, info, &(info.dst));
+		*cb->target = parse_to(cb->arg, portok, info, &(info->dst));
 		cb->xflags |= F_X_TO_DEST;
 		break;
 	case O_TO_SRC:
@@ -202,7 +202,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 				xtables_error(PARAMETER_PROBLEM,
 					   "SNAT: Multiple --to-source not supported");
 		}
-		*cb->target = parse_to(cb->arg, portok, info, &(info.src->snat));
+		*cb->target = parse_to(cb->arg, portok, info, &(info->src.snat));
 		cb->xflags |= F_X_TO_SRC;
 		break;
 	case O_PERSISTENT:
@@ -256,11 +256,11 @@ static void print_range(const struct nf_nat_ipv4_range *r)
 static void SDNAT_print(const void *ip, const struct xt_entry_target *target,
                        int numeric)
 {
-	const struct ipt_natinfo *y = (const void *)target;
+	const struct ipt_natinfo *t = (const void *)target;
 	unsigned int i = 0;
 
 	printf(" from:");
-	for (i = 0; i <t->info.src.rangesize; i++) {
+	for (i = 0; i < t->info.src.rangesize; i++) {
 		print_range(&info->snat_mr.range[i]);
 		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
 			printf(" random");
