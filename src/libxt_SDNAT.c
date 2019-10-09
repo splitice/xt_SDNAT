@@ -5,7 +5,7 @@
 #include <xtables.h>
 #include <limits.h> /* INT_MAX in ip_tables.h */
 #include <linux/netfilter_ipv4/ip_tables.h>
-#include <linux/netfilter/nf_nat.h>
+#include "libxt_SDNAT.h"
 
 enum {
 	O_TO_DEST = 0,
@@ -14,6 +14,8 @@ enum {
 	O_RANDOM_FULLY,
 	O_X_TO_SRC,
 	O_PERSISTENT,
+	O_CTMASK,
+	O_CTMARK,
 	O_X_TO_DEST, /* hidden flag */
 	F_TO_DEST   = 1 << O_TO_DEST,
 	F_TO_SRC       = 1 << O_TO_SRC,
@@ -28,8 +30,7 @@ enum {
 struct ipt_natinfo
 {
 	struct xt_entry_target t;
-	struct nf_nat_ipv4_multi_range_compat snat_mr;
-	struct nf_nat_ipv4_multi_range_compat dnat_mr;
+	struct xt_sdnat_info info;
 };
 
 static void SDNAT_help(void)
@@ -40,6 +41,10 @@ static void SDNAT_help(void)
 "				Address to map destination to.\n"
 " --to-source [<ipaddr>[-<ipaddr>]][:port[-port]]\n"
 "				Address to map source to.\n"
+" --ctmark [mark]\n"
+"				Conntrack mark to set.\n"
+" --ctmask [mask]\n"
+"				Conntrack mask to set.\n"
 "[--random] [--persistent]\n");
 }
 
@@ -51,6 +56,8 @@ static const struct xt_option_entry SDNAT_opts[] = {
 	{.name = "random", .id = O_RANDOM, .type = XTTYPE_NONE},
 	{.name = "random-fully", .id = O_RANDOM_FULLY, .type = XTTYPE_NONE},
 	{.name = "persistent", .id = O_PERSISTENT, .type = XTTYPE_NONE},
+	{.name = "ctmark", .id = O_CTMARK, .type = XTTYPE_INT},
+	{.name = "ctmask", .id = O_CTMASK, .type = XTTYPE_INT},
 	XTOPT_TABLEEND,
 };
 
@@ -185,7 +192,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 				xtables_error(PARAMETER_PROBLEM,
 					   "DNAT: Multiple --to-destination not supported");
 		}
-		*cb->target = parse_to(cb->arg, portok, info, &(info->dnat_mr));
+		*cb->target = parse_to(cb->arg, portok, info, &(info.dst));
 		cb->xflags |= F_X_TO_DEST;
 		break;
 	case O_TO_SRC:
@@ -193,11 +200,18 @@ static void SDNAT_parse(struct xt_option_call *cb)
 				xtables_error(PARAMETER_PROBLEM,
 					   "SNAT: Multiple --to-source not supported");
 		}
-		*cb->target = parse_to(cb->arg, portok, info, &(info->snat_mr));
+		*cb->target = parse_to(cb->arg, portok, info, &(info.src->snat));
 		cb->xflags |= F_X_TO_SRC;
 		break;
 	case O_PERSISTENT:
-		info->snat_mr.range[0].flags |= NF_NAT_RANGE_PERSISTENT;
+		info->info.src.range[0].flags |= NF_NAT_RANGE_PERSISTENT;
+		break;
+	case O_CTMARK:
+		info->info.ctmark = cb->arg;
+		break;
+
+	case O_CTMASK:
+		info->info.ctmask = cb->arg;
 		break;
 	}
 }
@@ -240,46 +254,50 @@ static void print_range(const struct nf_nat_ipv4_range *r)
 static void SDNAT_print(const void *ip, const struct xt_entry_target *target,
                        int numeric)
 {
-	const struct ipt_natinfo *info = (const void *)target;
+	const struct ipt_natinfo *y = (const void *)target;
 	unsigned int i = 0;
 
 	printf(" from:");
-	for (i = 0; i < info->snat_mr.rangesize; i++) {
+	for (i = 0; i <t->info.src.rangesize; i++) {
 		print_range(&info->snat_mr.range[i]);
-		if (info->snat_mr.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
+		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
 			printf(" random");
-		if (info->snat_mr.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
+		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
 			printf(" random-fully");
-		if (info->snat_mr.range[i].flags & NF_NAT_RANGE_PERSISTENT)
+		if (t->info.src.range[i].flags & NF_NAT_RANGE_PERSISTENT)
 			printf(" persistent");
 	}
 	printf(" to:");
-	for (i = 0; i < info->dnat_mr.rangesize; i++) {
-		print_range(&info->dnat_mr.range[i]);
-		if (info->dnat_mr.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
+	for (i = 0; i < t->info.dst.rangesize; i++) {
+		print_range(&t->info.dst.range[i]);
+		if (t->info.dst.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
 			printf(" random");
-		if (info->dnat_mr.range[i].flags & NF_NAT_RANGE_PERSISTENT)
+		if (t->info.dst.range[i].flags & NF_NAT_RANGE_PERSISTENT)
 			printf(" persistent");
 	}
 }
 
 static void SDNAT_save(const void *ip, const struct xt_entry_target *target)
 {
-	const struct ipt_natinfo *info = (const void *)target;
+	const struct ipt_natinfo *t = (const void *)target;
 	unsigned int i = 0;
 
-	for (i = 0; i < info->snat_mr.rangesize; i++) {	
+	for (i = 0; i < t->info.src.rangesize; i++) {	
 		printf(" --to-source ");
-		print_range(&info->snat_mr.range[i]);
+		print_range(&t->info.src.range[i]);
 		
-		if (info->snat_mr.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
+		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
 			printf(" --random");
-		if (info->snat_mr.range[i].flags & NF_NAT_RANGE_PERSISTENT)
+		if (t->info.src.range[i].flags & NF_NAT_RANGE_PERSISTENT)
 			printf(" --persistent");
 	}
-	for (i = 0; i < info->dnat_mr.rangesize; i++) {
+	for (i = 0; i < t->info.dst.rangesize; i++) {
 		printf(" --to-destination ");
-		print_range(&info->dnat_mr.range[i]);
+		print_range(&t->info.dst.range[i]);
+	}
+	if(t->info.ctmark != 0){
+		printf(" --ctmark %u", t->info.ctmark);
+		printf(" --ctmask %u", t->info.ctmask);
 	}
 }
 
@@ -288,8 +306,8 @@ static struct xtables_target sdnat_tg_reg = {
     .revision      = 1,
 	.version       = XTABLES_VERSION,
 	.family		= NFPROTO_IPV4,
-	.size		= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
-	.userspacesize	= XT_ALIGN(sizeof(struct nf_nat_ipv4_multi_range_compat) * 2),
+	.size		= XT_ALIGN(sizeof(struct xt_sdnat_info)),
+	.userspacesize	= XT_ALIGN(sizeof(struct xt_sdnat_info)),
 	.help		= SDNAT_help,
 	.x6_parse	= SDNAT_parse,
 	.x6_fcheck	= SDNAT_fcheck,

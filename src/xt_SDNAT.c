@@ -10,7 +10,8 @@
 #include <linux/skbuff.h>
 #include <linux/netfilter.h>
 #include <linux/netfilter/x_tables.h>
-#include <net/netfilter/nf_nat_core.h>
+#include "libxt_SDNAT.h"
+
 
 static void xt_nat_convert_range(struct nf_nat_range *dst,
 				 const struct nf_nat_ipv4_range *src)
@@ -28,17 +29,28 @@ static void xt_nat_convert_range(struct nf_nat_range *dst,
 static unsigned int
 xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 {
-	const struct nf_nat_ipv4_multi_range_compat *mr = par->targinfo;
+	const struct xt_sdnat_info *info = par->targinfo;
+	const struct nf_nat_ipv4_multi_range_compat *mr = &info.nat;
 	struct nf_nat_range snat_range, dnat_range;
 	enum ip_conntrack_info ctinfo;
 	struct nf_conn *ct;
+	u_int32_t newmark;
+
 
 	ct = nf_ct_get(skb, &ctinfo);
 	NF_CT_ASSERT(ct != NULL &&
 		     (ctinfo == IP_CT_NEW || ctinfo == IP_CT_RELATED));
 
-	xt_nat_convert_range(&snat_range, &mr->range[0]);
-	xt_nat_convert_range(&dnat_range, &(mr+1)->range[0]);
+	xt_nat_convert_range(&snat_range, info.src.range[0]);
+	xt_nat_convert_range(&dnat_range, info.dst->range[0]);
+
+
+	newmark = (ct->mark & ~info->ctmask) ^ info->ctmark;
+
+	if (ct->mark != newmark) {
+		ct->mark = newmark;
+		nf_conntrack_event_cache(IPCT_MARK, ct);
+	}
 	
 	nf_nat_setup_info(ct, &snat_range, NF_NAT_MANIP_SRC);
 	return nf_nat_setup_info(ct, &dnat_range, NF_NAT_MANIP_DST);
@@ -49,7 +61,7 @@ static struct xt_target xt_nat_target_reg[] __read_mostly = {
 		.name		= "SDNAT",
 		.revision	= 1,
 		.target		= xt_sdnat_target_v1,
-		.targetsize	= sizeof(struct nf_nat_ipv4_multi_range_compat)*2,
+		.targetsize	= sizeof(struct xt_sdnat_info),
 		.table		= "nat",
 		.hooks		= (1 << NF_INET_PRE_ROUTING) |
 				  (1 << NF_INET_LOCAL_IN) |
