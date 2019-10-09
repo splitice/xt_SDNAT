@@ -254,7 +254,7 @@ static void SDNAT_print(const void *ip, const struct xt_entry_target *target,
 
 	printf(" from:");
 	for (i = 0; i < t->info.src.rangesize; i++) {
-		print_range(&info->info.src.range[i]);
+		print_range(&t->info.src.range[i]);
 		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM)
 			printf(" random");
 		if (t->info.src.range[i].flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
