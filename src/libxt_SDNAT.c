@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <xtables.h>
 #include <limits.h> /* INT_MAX in ip_tables.h */
+#include <linux/netfilter/nf_nat.h>
 #include "libxt_SDNAT.h"
 
 enum {
