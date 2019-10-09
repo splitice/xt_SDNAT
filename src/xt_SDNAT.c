@@ -9,9 +9,7 @@
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/netfilter.h>
-#include <linux/netfilter/x_tables.h>
 #include "libxt_SDNAT.h"
-
 
 static void xt_nat_convert_range(struct nf_nat_range *dst,
 				 const struct nf_nat_ipv4_range *src)
@@ -30,7 +28,6 @@ static unsigned int
 xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_sdnat_info *info = par->targinfo;
-	const struct nf_nat_ipv4_multi_range_compat *mr = &info.nat;
 	struct nf_nat_range snat_range, dnat_range;
 	enum ip_conntrack_info ctinfo;
 	struct nf_conn *ct;
