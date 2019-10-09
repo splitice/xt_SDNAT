@@ -56,8 +56,10 @@ static const struct xt_option_entry SDNAT_opts[] = {
 	{.name = "random", .id = O_RANDOM, .type = XTTYPE_NONE},
 	{.name = "random-fully", .id = O_RANDOM_FULLY, .type = XTTYPE_NONE},
 	{.name = "persistent", .id = O_PERSISTENT, .type = XTTYPE_NONE},
-	{.name = "ctmark", .id = O_CTMARK, .type = XTTYPE_INT},
-	{.name = "ctmask", .id = O_CTMASK, .type = XTTYPE_INT},
+	{.name = "ctmark", .id = O_CTMARK, .type = XTTYPE_UINT32, .flags = XTOPT_PUT,
+	 XTOPT_POINTER(s, cfg.ctmark)},
+	{.name = "ctmask", .id = O_CTMASK, .type = XTTYPE_UINT32, .flags = XTOPT_PUT,
+	 XTOPT_POINTER(s, cfg.ctmask)},
 	XTOPT_TABLEEND,
 };
 
