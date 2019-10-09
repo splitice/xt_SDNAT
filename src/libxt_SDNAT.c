@@ -173,7 +173,7 @@ parse_to(const char *orig_arg, int portok, struct ipt_natinfo *info, struct nf_n
 }
 
 static void SDNAT_init(struct xt_entry_target *target){
-	const struct ipt_natinfo *t = (const void *)target;
+	struct ipt_natinfo *t = (const void *)target;
 	t->info.ctmark = 0;
 	t->info.ctmask = 0;
 }
