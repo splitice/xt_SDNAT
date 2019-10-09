@@ -202,7 +202,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 				xtables_error(PARAMETER_PROBLEM,
 					   "SNAT: Multiple --to-source not supported");
 		}
-		*cb->target = parse_to(cb->arg, portok, info, &(info->info.src.snat));
+		*cb->target = parse_to(cb->arg, portok, info, &(info->info.src));
 		cb->xflags |= F_X_TO_SRC;
 		break;
 	case O_PERSISTENT:
