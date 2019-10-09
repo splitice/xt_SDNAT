@@ -38,8 +38,8 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 	NF_CT_ASSERT(ct != NULL &&
 		     (ctinfo == IP_CT_NEW || ctinfo == IP_CT_RELATED));
 
-	xt_nat_convert_range(&snat_range, info->src.range[0]);
-	xt_nat_convert_range(&dnat_range, info->dst->range[0]);
+	xt_nat_convert_range(&snat_range, info->src.range);
+	xt_nat_convert_range(&dnat_range, info->dst->range);
 
 
 	newmark = (ct->mark & ~info->ctmask) ^ info->ctmark;
