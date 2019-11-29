@@ -13,7 +13,7 @@
 #include <net/netfilter/nf_conntrack_ecache.h>
 #include "libxt_SDNAT.h"
 
-static bool xt_nat_convert_range(struct nf_nat_range *dst,
+static bool xt_nat_convert_range(struct nf_nat_range2 *dst,
 				 const struct nf_nat_ipv4_range *src)
 {
 	if(!(src->flags & NF_NAT_SET))
@@ -21,6 +21,7 @@ static bool xt_nat_convert_range(struct nf_nat_range *dst,
 
 	memset(&dst->min_addr, 0, sizeof(dst->min_addr));
 	memset(&dst->max_addr, 0, sizeof(dst->max_addr));
+	memset(&dst->base_proto, 0, sizeof(dst->base_proto));
 
 	dst->flags	     = src->flags & ~NF_NAT_SET;
 	dst->min_addr.ip = src->min_ip;
