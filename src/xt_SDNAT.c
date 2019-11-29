@@ -9,7 +9,7 @@
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/netfilter.h>
-#include <net/netfilter/nf_nat_core.h>
+#include <net/netfilter/nf_nat.h>
 #include <net/netfilter/nf_conntrack_ecache.h>
 #include "libxt_SDNAT.h"
 
@@ -35,14 +35,14 @@ static unsigned int
 xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 {
 	const struct xt_sdnat_info *info = par->targinfo;
-	struct nf_nat_range snat_range, dnat_range;
+	struct nf_nat_range2 snat_range, dnat_range;
 	enum ip_conntrack_info ctinfo;
 	struct nf_conn *ct;
 	u_int32_t newmark;
 
 
 	ct = nf_ct_get(skb, &ctinfo);
-	NF_CT_ASSERT(ct != NULL &&
+	WARN_ON(ct != NULL &&
 		     (ctinfo == IP_CT_NEW || ctinfo == IP_CT_RELATED));
 
 	xt_nat_convert_range(&dnat_range, info->dst.range);
