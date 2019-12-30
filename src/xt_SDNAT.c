@@ -43,11 +43,9 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 
 
 	ct = nf_ct_get(skb, &ctinfo);
-	WARN_ON(ct != NULL &&
-		     (ctinfo == IP_CT_NEW || ctinfo == IP_CT_RELATED));
+	WARN_ON(ct == NULL || (ctinfo != IP_CT_NEW &&  ctinfo != IP_CT_RELATED));
 
 	xt_nat_convert_range(&dnat_range, info->dst.range);
-
 
 	newmark = (ct->mark & ~info->ctmask) ^ info->ctmark;
 
