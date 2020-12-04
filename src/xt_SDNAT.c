@@ -43,21 +43,33 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 
 
 	ct = nf_ct_get(skb, &ctinfo);
-	WARN_ON(ct == NULL || (ctinfo != IP_CT_NEW &&  ctinfo != IP_CT_RELATED));
+	if(unlikely(ct == NULL || (ctinfo != IP_CT_NEW &&  ctinfo != IP_CT_RELATED))){	
+		WARN_ON(ct == NULL || (ctinfo != IP_CT_NEW &&  ctinfo != IP_CT_RELATED));
+		return NF_DROP;
+	}
 
-	xt_nat_convert_range(&dnat_range, info->dst.range);
+	// DNAT first
+	if(likely(xt_nat_convert_range(&dnat_range, info->dst.range))){
+		if(nf_nat_setup_info(ct, &dnat_range, NF_NAT_MANIP_DST) == NF_DROP){
+			return NF_DROP;
+		}
+	}
 
+	// then SNAT
+	if(xt_nat_convert_range(&snat_range, info->src.range)){
+		if(unlikely(nf_nat_setup_info(ct, &snat_range, NF_NAT_MANIP_SRC) == NF_DROP)){
+			return NF_DROP;
+		}
+	}
+
+	// apply mark
 	newmark = (ct->mark & ~info->ctmask) ^ info->ctmark;
-
 	if (ct->mark != newmark) {
 		ct->mark = newmark;
 		nf_conntrack_event_cache(IPCT_MARK, ct);
 	}
-	
-	if(xt_nat_convert_range(&snat_range, info->src.range)){
-		nf_nat_setup_info(ct, &snat_range, NF_NAT_MANIP_SRC);
-	}
-	return nf_nat_setup_info(ct, &dnat_range, NF_NAT_MANIP_DST);
+
+	return NF_ACCEPT;
 }
 
 static struct xt_target xt_nat_target_reg[] __read_mostly = {
