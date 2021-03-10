@@ -11,7 +11,7 @@
 #include <linux/netfilter.h>
 #include <net/netfilter/nf_nat.h>
 #include <net/netfilter/nf_conntrack_ecache.h>
-#include "libxt_SDNAT.h"
+#include "xt_SDNAT.h"
 
 static bool xt_nat_convert_range(struct nf_nat_range2 *dst,
 				 const struct nf_nat_ipv4_range *src)
@@ -32,6 +32,7 @@ static bool xt_nat_convert_range(struct nf_nat_range2 *dst,
 	return true;
 }
 
+
 static unsigned int
 xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 {
@@ -43,30 +44,34 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 
 
 	ct = nf_ct_get(skb, &ctinfo);
-	if(unlikely(ct == NULL || (ctinfo != IP_CT_NEW &&  ctinfo != IP_CT_RELATED))){	
-		WARN_ON(ct == NULL || (ctinfo != IP_CT_NEW &&  ctinfo != IP_CT_RELATED));
+	if(unlikely(ct == NULL || (ctinfo != IP_CT_NEW && ctinfo != IP_CT_RELATED))){	
+		WARN_ON(ct == NULL || (ctinfo != IP_CT_NEW && ctinfo != IP_CT_RELATED));
 		return NF_DROP;
 	}
 
 	// DNAT first
-	if(likely(xt_nat_convert_range(&dnat_range, info->dst.range))){
-		if(nf_nat_setup_info(ct, &dnat_range, NF_NAT_MANIP_DST) == NF_DROP){
-			return NF_DROP;
+	if(info->flags & XT_SDNAT_FLAG_DNAT){
+		if(likely(xt_nat_convert_range(&dnat_range, info->dst.range))){
+			if(nf_nat_setup_info(ct, &dnat_range, NF_NAT_MANIP_DST) == NF_DROP){
+				return NF_DROP;
+			}
 		}
 	}
 
 	// then SNAT
-	if(xt_nat_convert_range(&snat_range, info->src.range)){
+	if((info->flags & XT_SDNAT_FLAG_SNAT) && xt_nat_convert_range(&snat_range, info->src.range)){
 		if(unlikely(nf_nat_setup_info(ct, &snat_range, NF_NAT_MANIP_SRC) == NF_DROP)){
 			return NF_DROP;
 		}
 	}
 
 	// apply mark
-	newmark = (ct->mark & ~info->ctmask) ^ info->ctmark;
-	if (ct->mark != newmark) {
-		ct->mark = newmark;
-		nf_conntrack_event_cache(IPCT_MARK, ct);
+	if(info->flags & XT_SDNAT_FLAG_MASK){
+		newmark = (ct->mark & ~info->ctmask) ^ info->ctmark;
+		if (ct->mark != newmark) {
+			ct->mark = newmark;
+			nf_conntrack_event_cache(IPCT_MARK, ct);
+		}
 	}
 
 	return NF_ACCEPT;
