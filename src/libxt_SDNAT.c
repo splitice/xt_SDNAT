@@ -221,7 +221,7 @@ static void SDNAT_parse(struct xt_option_call *cb)
 		info->info.flags |= XT_SDNAT_FLAG_MASK;
 		break;
 	case O_SEQADJ:
-		info->info.flags |= XT_SDNAT_SEQADJ_MASK;
+		info->info.flags |= XT_SDNAT_FLAG_SEQADJ;
 		break;
 	}
 }
@@ -306,7 +306,7 @@ static void SDNAT_save(const void *ip, const struct xt_entry_target *target)
 		printf(" --ctmark %u", t->info.ctmark);
 		printf(" --ctmask %u", t->info.ctmask);
 	}
-	
+
 	if(t->info.flags & XT_SDNAT_FLAG_SEQADJ){
 		printf(" --also-seqadj");
 	}
