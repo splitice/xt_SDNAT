@@ -10,6 +10,7 @@ struct xt_sdnat_info {
 
 #define XT_SDNAT_FLAG_SNAT (1 << 0)
 #define XT_SDNAT_FLAG_DNAT (1 << 1)
-#define XT_SDNAT_FLAG_MASK (1 << 1)
+#define XT_SDNAT_FLAG_MASK (1 << 2)
+#define XT_SDNAT_FLAG_SEQADJ (1 << 3)
 
 #define NF_NAT_SET		(1 << 5)

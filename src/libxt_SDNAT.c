@@ -12,6 +12,7 @@ enum {
 	O_TO_SRC,
 	O_RANDOM,
 	O_RANDOM_FULLY,
+	O_SEQADJ,
 	O_X_TO_SRC,
 	O_PERSISTENT,
 	O_CTMASK,
@@ -45,7 +46,7 @@ static void SDNAT_help(void)
 "				Conntrack mark to set.\n"
 " --ctmask [mask]\n"
 "				Conntrack mask to set.\n"
-"[--random] [--persistent]\n");
+"[--random] [--persistent] [--also-seqadj]\n");
 }
 
 static const struct xt_option_entry SDNAT_opts[] = {
@@ -58,6 +59,7 @@ static const struct xt_option_entry SDNAT_opts[] = {
 	 XTOPT_POINTER(struct xt_sdnat_info, ctmark)},
 	{.name = "ctmask", .id = O_CTMASK, .type = XTTYPE_UINT32, .flags = XTOPT_PUT,
 	 XTOPT_POINTER(struct xt_sdnat_info, ctmask)},
+	{.name = "also-seqadj", .id = O_SEQADJ, .type = XTTYPE_NONE},
 	XTOPT_TABLEEND,
 };
 
@@ -218,6 +220,9 @@ static void SDNAT_parse(struct xt_option_call *cb)
 	case O_CTMASK:
 		info->info.flags |= XT_SDNAT_FLAG_MASK;
 		break;
+	case O_SEQADJ:
+		info->info.flags |= XT_SDNAT_SEQADJ_MASK;
+		break;
 	}
 }
 
@@ -300,6 +305,10 @@ static void SDNAT_save(const void *ip, const struct xt_entry_target *target)
 	if((t->info.flags & XT_SDNAT_FLAG_MASK) && t->info.ctmark != 0){
 		printf(" --ctmark %u", t->info.ctmark);
 		printf(" --ctmask %u", t->info.ctmask);
+	}
+	
+	if(t->info.flags & XT_SDNAT_FLAG_SEQADJ){
+		printf(" --also-seqadj");
 	}
 }
 

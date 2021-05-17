@@ -11,6 +11,8 @@
 #include <linux/netfilter.h>
 #include <net/netfilter/nf_nat.h>
 #include <net/netfilter/nf_conntrack_ecache.h>
+#include <net/netfilter/nf_conntrack_extend.h>
+#include <net/netfilter/nf_conntrack_seqadj.h>
 #include "xt_SDNAT.h"
 
 static bool xt_nat_convert_range(struct nf_nat_range2 *dst,
@@ -72,6 +74,11 @@ xt_sdnat_target_v1(struct sk_buff *skb, const struct xt_action_param *par)
 			ct->mark = newmark;
 			nf_conntrack_event_cache(IPCT_MARK, ct);
 		}
+	}
+
+	// also seqadj
+	if(info->flags & XT_SDNAT_FLAG_SEQADJ){
+		nfct_seqadj_ext_add(ct);
 	}
 
 	return NF_ACCEPT;
