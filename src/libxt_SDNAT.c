@@ -327,6 +327,10 @@ static struct xtables_target sdnat_tg_reg = {
 	.x6_options	= SDNAT_opts,
 };
 
+
+#ifndef _init
+#define _init __attribute__((constructor)) _INIT
+#endif
 void _init(void)
 {
 	xtables_register_target(&sdnat_tg_reg);
