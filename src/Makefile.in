@@ -43,7 +43,7 @@ libxt_SDNAT_sh.o: libxt_SDNAT.c
 
 
 %.so: %_sh.o
-	gcc -shared -lxtables -o $@ $<
+	gcc -shared -o $@ $< -lxtables
 
 linstall: | libxt_SDNAT.so
 	@echo " *"

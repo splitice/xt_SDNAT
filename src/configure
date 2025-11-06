@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
 
 PATH=$PATH:/bin:/usr/bin:/usr/sbin:/sbin:/usr/local/sbin
 
@@ -45,7 +46,7 @@ get_lib_dir() {
 }
 
 get_lib_from_bin() {
-  LIB=`strings $IPTBIN | grep ^/.*lib.*tables`
+  LIB=`strings $IPTBIN | grep ^/.*lib.*/.*tables`
   if [ "$LIB" ]; then
     IPTLIB=$LIB
     echo "$IPTLIB (from binary)"
@@ -57,10 +58,10 @@ get_lib_from_bin() {
 get_lib_from_lib() {
   XLIB=`/usr/bin/ldd $IPTBIN | grep libxtables | sed -n 's!.* \(/[^ ]\+\).*!\1!p'`
   test "$XLIB" || return 1
-  LIB=`strings $XLIB | grep ^/.*lib.*tables`
+  LIB=`strings $XLIB | grep ^/.*lib.*/.*tables`
   if [ "$LIB" ]; then
     IPTLIB=$LIB
-    echo "$IPTLIB (from iptables binary)"
+    echo "$IPTLIB (from libxtables.so, from binary)"
     return 0
   fi
   return 1
@@ -134,7 +135,7 @@ iptables_find_version() {
   if [ "$IPTVER" ]; then
     echo "$IPTVER (user specified)"
   else
-    IPTVER=`$IPTBIN -V 2>/dev/null | sed -n s/iptables.v//p`
+    IPTVER=`$IPTBIN -V 2>/dev/null | sed -n 's/^iptables v//; s/ .*//p'`
     if [ "$IPTVER" ]; then
       echo "$IPTVER (detected from $IPTBIN)"
       return
@@ -149,6 +150,34 @@ iptables_find_version() {
       return
     fi
     error "Can not find iptables version, try setting it with --ipt-ver="
+  fi
+}
+
+compiler_presence_test() {
+  echo -n "Check for working gcc: "
+  $CC -v >/dev/null 2>&1
+  if [ $? = 0 ]; then
+    echo Yes "($CC)"
+  else
+    echo No
+
+    echo "! You need gcc to install module from source"
+    if [ -s /etc/debian_version ]; then
+      NAME=Debian
+      if [ -e /etc/os-release ]; then
+	. /etc/os-release >/dev/null 2>&1
+      fi
+      echo "! "
+      echo "! Under $NAME try to run this:"
+      echo "!   root# apt-get install gcc"
+      echo "! "
+    elif [ -s /etc/redhat-release ]; then
+      echo "! "
+      echo "! Under Centos try to run this:"
+      echo "!   root# yum install gcc"
+      echo "! "
+    fi
+    exit 1
   fi
 }
 
@@ -169,7 +198,7 @@ compile_libitp_test() {
   echo "
 #define __EXPORTED_HEADERS__
 #include <$*>" > test.c
-  gcc -c test.c $FLAGS >/dev/null 2>&1
+  $CC -c test.c $FLAGS >/dev/null 2>&1
   RET=$?
   if [ $RET = 0 ]; then
     echo Yes $MSG;
@@ -211,6 +240,7 @@ iptables_try_pkgconfig() {
     # and if not, then it's older who need it.
     IPTCFLAGS="-I$KDIR/include -DIPTABLES_VERSION=\\\\\"$IPTVER\\\\\""
   fi
+  compiler_presence_test
   if compile_libitp_test xtables.h; then
     IPTCFLAGS="-DXTABLES $IPTCFLAGS"
   elif ! compile_libitp_test iptables.h; then
@@ -218,7 +248,11 @@ iptables_try_pkgconfig() {
     if [ -s /etc/debian_version ]; then
       echo "! "
       echo "! Under Debian simply run this:"
-      echo "!   root# apt-get install iptables-dev pkg-config"
+      if apt-cache policy libxtables-dev 2>&1 | grep -F -q "Candidate:"; then
+        echo "!   root# apt-get install libxtables-dev pkg-config"
+      else
+        echo "!   root# apt-get install iptables-dev pkg-config"
+      fi
     elif [ -s /etc/redhat-release ]; then
       echo "! "
       arch=.`uname -m`
@@ -284,7 +318,7 @@ do
     --kver=*)  KVERSION="$ac_optarg" ;;
     --kdir=*)      KDIR="$ac_optarg" ;;
     --disable-dkms*)     SKIPDKMS=1 ;;
-    --from-dkms-conf) ;;
+    --from-dkms-conf*) ;;
     --make) echo called from make; CARGS=`echo $CARGS | sed s/--make//g` ;;
     -Werror) KOPTS="$KOPTS -Werror" ;;
     --help|-h) show_help ;;
@@ -386,7 +420,9 @@ kconfig() {
     echo "! Attention: $1 is undefined in your kernel configuration"
     echo "!   Without this option enabled $2 will not work."
     echo
+    return 1
   fi
+  return 0
 }
 
 kernel_check_config() {
@@ -450,6 +486,8 @@ dkms_check() {
   fi
 }
 
+echo "Module version: $(./version.sh)"
+
 kernel_find_version	#KVERSION
 test "$KLIBMOD" || KLIBMOD=$KVERSION
 echo "Kernel version: $KVERSION ($KHOW)"
@@ -459,6 +497,7 @@ kernel_check_consistency
 kernel_check_config
 kernel_check_features
 
+CC=${CC:-gcc}
 test "$IPTBIN" || IPTBIN=`which iptables`
 
 iptables_find_version	#IPTVER
@@ -489,4 +528,3 @@ echo
 echo "  If you need some options enabled run ./configure --help"
 echo "  Now run: make all install"
 echo
-
